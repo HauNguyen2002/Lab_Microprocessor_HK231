@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "Timer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -120,45 +120,38 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 int sec=0;
-int secround=0;
-int min=10;
+int min=11;
 int hour=11;
+setTimer(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(sec>11)
+	  if(timer_flag==1)
 	  {
-		  secround++;
-		  sec=0;
+		  if(sec>59)
+		  {
+			  sec=0;
+			  min++;
+		  }
+
+		  if(min>59)
+		  {
+			  min=0;
+			  hour++;
+		  }
+		  if(hour>11) hour=0;
+		  clearAllClock(11);
+		  setNumberOnClock(sec/5);
+		  setNumberOnClock(min/5);
+		  setNumberOnClock(hour);
+		  sec++;
+		  setTimer(10);
 	  }
-	  if(secround==5)
-  	  {
-  		  secround=0;
-  		  min++;
-  		  if(min-1 !=hour && min-1!=sec) clearNumberOnClock(min-1);
-  	  }
-
-  	  if(min>11)
-  	  {
-  		  min=0;
-  		  hour++;
-  		  if(hour-1!=min && hour-1!=sec) clearNumberOnClock(hour-1);
-  	  }
-  	  if(hour>11) hour=0;
-
-	  setNumberOnClock(sec);
-	  setNumberOnClock(min);
-	  setNumberOnClock(hour);
-	  if(sec==0 && min!=11 && hour!=11) clearNumberOnClock(11);
-	  if(sec!=0 && sec-1!=min && sec-1!=hour) clearNumberOnClock(sec-1);
-
-
-	  sec++;
-
-	  HAL_Delay(100);
+	  timerRun();
+	  HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
