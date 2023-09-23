@@ -20,7 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Timer.h"
@@ -166,6 +165,109 @@ void update7SEG(int index)
 		break;
 	}
 }
+
+const int MAX_LED_MATRIX=8;
+int index_led_matrix=0;
+
+uint16_t matrix_buffer [8] = {0x004,0x008,0x400,0x800,0x1000,0x2000,0x4000,0x8000};
+uint16_t letterA[8]= {0x0,0xFE00,0xFF00,0x1300,0x1300,0xFF00,0xFE00,0x0};
+
+void turnoffall();
+void updateLEDMatrix (int index ) {
+	if(index==0){
+		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[7]);
+		if(letterA[7]!=0x0)HAL_GPIO_TogglePin(GPIOB, letterA[7]);
+	}
+	if(index!=0){
+		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+		if(letterA[index-1]!=0x0) HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+	}
+	HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+	HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//	switch(index){
+//	case 0:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[7]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[7]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 1:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 2:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 3:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 4:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 5:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 6:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	case 7:
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index-1]);
+//		HAL_GPIO_TogglePin(GPIOA, matrix_buffer[index]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index-1]);
+//		HAL_GPIO_TogglePin(GPIOB, letterA[index]);
+//		break;
+//	}
+
+}
+void turnoffall()
+{
+	for(int i=0;i<8;i++)
+	{
+		HAL_GPIO_WritePin(GPIOA, matrix_buffer[i], 0x0000);
+		HAL_GPIO_WritePin(GPIOB, letterA[i], 0x0000);
+	}
+}
+void shift(int dir)
+{
+	uint16_t rtemp=letterA[0];
+	uint16_t ltemp=letterA[7];
+	switch(dir)
+	{
+	case 1:
+
+		for(int i=0;i<7;i++)
+		{
+			letterA[i]=letterA[i+1];
+		}
+		letterA[7]=rtemp;
+		break;
+	case 2:
+
+		for(int i=7;i>0;i--)
+		{
+			letterA[i]=letterA[i-1];
+		}
+		letterA[0]=ltemp;
+		break;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -202,8 +304,12 @@ HAL_TIM_Base_Start_IT(&htim2);
 int hour=9;
 int minute=0;
 int second=59;
-setTimer(2000);
+setTimer(3000);
 scansetTimer(1000);
+matrixsetTimer(1000);
+shiftsetTimer(1000);
+HAL_GPIO_TogglePin(GPIOA,matrix_buffer[7]);
+HAL_GPIO_TogglePin(GPIOB,letterA[7]);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -237,6 +343,19 @@ scansetTimer(1000);
 		  if(index_led>3) index_led=0;
 		  scansetTimer(100);
 	  }
+	  if(matrix_timer_flag==1)
+	  {
+		  updateLEDMatrix(index_led_matrix++);
+		  if(index_led_matrix== MAX_LED_MATRIX){
+			  index_led_matrix=0;
+			  turnoffall();
+			  shift(2);
+			  HAL_GPIO_TogglePin(GPIOA,matrix_buffer[7]);
+			  HAL_GPIO_TogglePin(GPIOB,letterA[7]);
+		  }
+		  matrixsetTimer(10);
+	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -338,26 +457,38 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DOT_Pin|LED_TEST_Pin|en1_Pin|en2_Pin
-                          |en3_Pin|en4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, ENM0_Pin|ENM1_Pin|DOT_Pin|LED_TEST_Pin
+                          |en1_Pin|en2_Pin|en3_Pin|en4_Pin
+                          |ENM2_Pin|ENM3_Pin|ENM4_Pin|ENM5_Pin
+                          |ENM6_Pin|ENM7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, A_Pin|B_Pin|C_Pin|D_Pin
-                          |E_Pin|F_Pin|G_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, A_Pin|B_Pin|C_Pin|ROW2_Pin
+                          |ROW3_Pin|ROW4_Pin|ROW5_Pin|ROW6_Pin
+                          |ROW7_Pin|D_Pin|E_Pin|F_Pin
+                          |G_Pin|ROW0_Pin|ROW1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DOT_Pin LED_TEST_Pin en1_Pin en2_Pin
-                           en3_Pin en4_Pin */
-  GPIO_InitStruct.Pin = DOT_Pin|LED_TEST_Pin|en1_Pin|en2_Pin
-                          |en3_Pin|en4_Pin;
+  /*Configure GPIO pins : ENM0_Pin ENM1_Pin DOT_Pin LED_TEST_Pin
+                           en1_Pin en2_Pin en3_Pin en4_Pin
+                           ENM2_Pin ENM3_Pin ENM4_Pin ENM5_Pin
+                           ENM6_Pin ENM7_Pin */
+  GPIO_InitStruct.Pin = ENM0_Pin|ENM1_Pin|DOT_Pin|LED_TEST_Pin
+                          |en1_Pin|en2_Pin|en3_Pin|en4_Pin
+                          |ENM2_Pin|ENM3_Pin|ENM4_Pin|ENM5_Pin
+                          |ENM6_Pin|ENM7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : A_Pin B_Pin C_Pin D_Pin
-                           E_Pin F_Pin G_Pin */
-  GPIO_InitStruct.Pin = A_Pin|B_Pin|C_Pin|D_Pin
-                          |E_Pin|F_Pin|G_Pin;
+  /*Configure GPIO pins : A_Pin B_Pin C_Pin ROW2_Pin
+                           ROW3_Pin ROW4_Pin ROW5_Pin ROW6_Pin
+                           ROW7_Pin D_Pin E_Pin F_Pin
+                           G_Pin ROW0_Pin ROW1_Pin */
+  GPIO_InitStruct.Pin = A_Pin|B_Pin|C_Pin|ROW2_Pin
+                          |ROW3_Pin|ROW4_Pin|ROW5_Pin|ROW6_Pin
+                          |ROW7_Pin|D_Pin|E_Pin|F_Pin
+                          |G_Pin|ROW0_Pin|ROW1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -371,6 +502,8 @@ void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef * htim )
 {
 	timerRun();
 	scantimerRun();
+	matrixtimerRun();
+	shifttimerRun();
 }
 /* USER CODE END 4 */
 

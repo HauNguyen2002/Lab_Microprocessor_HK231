@@ -35,15 +35,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_ranges 000008c8  00000000  00000000  0002a6d0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  00016297  00000000  00000000  0002af98  2**0
+ 16 .debug_macro  000162a1  00000000  00000000  0002af98  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   000094c2  00000000  00000000  0004122f  2**0
+ 17 .debug_line   000094d2  00000000  00000000  00041239  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    00081f48  00000000  00000000  0004a6f1  2**0
+ 18 .debug_str    00081f57  00000000  00000000  0004a70b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000053  00000000  00000000  000cc639  2**0
+ 19 .comment      00000053  00000000  00000000  000cc662  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000026f0  00000000  00000000  000cc68c  2**2
+ 20 .debug_frame  000026f0  00000000  00000000  000cc6b8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -77,9 +77,9 @@ Disassembly of section .text:
  8000148:	08001f3c 	.word	0x08001f3c
 
 0800014c <setTimer>:
-
-int scan_timer_counter=0;
-int scan_timer_flag=0;
+int timer_counter=0;
+int timer_flag=0;
+int TIMER_CYCLE=10;
 
 void setTimer(int duration)
 {
@@ -142,6 +142,9 @@ void timerRun()
  80001b0:	20000158 	.word	0x20000158
 
 080001b4 <scansetTimer>:
+
+int scan_timer_counter=0;
+int scan_timer_flag=0;
 
 void scansetTimer(int duration)
 {
@@ -671,8 +674,8 @@ int minute=0;
 int second=59;
  8000538:	233b      	movs	r3, #59	; 0x3b
  800053a:	607b      	str	r3, [r7, #4]
-setTimer(2000);
- 800053c:	f44f 60fa 	mov.w	r0, #2000	; 0x7d0
+setTimer(3000);
+ 800053c:	f640 30b8 	movw	r0, #3000	; 0xbb8
  8000540:	f7ff fe04 	bl	800014c <setTimer>
 scansetTimer(1000);
  8000544:	f44f 707a 	mov.w	r0, #1000	; 0x3e8
