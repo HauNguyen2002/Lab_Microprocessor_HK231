@@ -278,49 +278,52 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int counter=50;
-int flag=0;
+const int MAX_LED = 4;
+int index_led=0;
+int led_buffer[4] = {1,2,3,4};
+int counter=0;
+void update7SEG(int index)
+{
+	switch (index){
+	case 0:
+		HAL_GPIO_WritePin(GPIOA, en1_Pin, 0);
+		HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
+		display7SEG(1);
+		break;
+	case 1:
+		HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en2_Pin, 0);
+		HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
+		display7SEG(2);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en3_Pin, 0);
+		HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
+		display7SEG(3);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
+		HAL_GPIO_WritePin(GPIOA, en4_Pin, 0);
+		display7SEG(0);
+		break;
+	}
+}
 void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef * htim )
 {
 	if(counter==0)
 	{
-		HAL_GPIO_TogglePin(GPIOA, LED_TEST_Pin);
-		counter=50;
-		if(flag%2!=0) HAL_GPIO_TogglePin(GPIOA, DOT_Pin);
-		switch(flag)
-		{
-		case 0:
-			HAL_GPIO_WritePin(GPIOA, en1_Pin, 0);
-			HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
-			display7SEG(1);
-			flag++;
-			break;
-		case 1:
-			HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en2_Pin, 0);
-			HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
-			display7SEG(2);
-			flag++;
-			break;
-		case 2:
-			HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en3_Pin, 0);
-			HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
-			display7SEG(3);
-			flag++;
-			break;
-		case 3:
-			HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
-			HAL_GPIO_WritePin(GPIOA, en4_Pin, 0);
-			display7SEG(0);
-			flag=0;
-			break;
+		counter=25;
+		update7SEG(index_led++);
+		if (index_led>3){
+			index_led=0;
+			HAL_GPIO_TogglePin(GPIOA, DOT_Pin);
 		}
 	}
 	counter--;
