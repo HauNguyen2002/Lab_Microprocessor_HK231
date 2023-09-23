@@ -250,14 +250,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_TEST_Pin|en1_Pin|en2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DOT_Pin|LED_TEST_Pin|en1_Pin|en2_Pin
+                          |en3_Pin|en4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, A_Pin|B_Pin|C_Pin|D_Pin
                           |E_Pin|F_Pin|G_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LED_TEST_Pin en1_Pin en2_Pin */
-  GPIO_InitStruct.Pin = LED_TEST_Pin|en1_Pin|en2_Pin;
+  /*Configure GPIO pins : DOT_Pin LED_TEST_Pin en1_Pin en2_Pin
+                           en3_Pin en4_Pin */
+  GPIO_InitStruct.Pin = DOT_Pin|LED_TEST_Pin|en1_Pin|en2_Pin
+                          |en3_Pin|en4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -275,33 +278,49 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int counter=10;
+int counter=50;
 int flag=0;
-int segcount=0;
 void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef * htim )
 {
-	switch(flag)
-	{
-	case 0:
-		HAL_GPIO_WritePin(GPIOA, en1_Pin, 0);
-		HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
-		break;
-	case 1:
-		HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
-		HAL_GPIO_WritePin(GPIOA, en2_Pin, 0);
-		break;
-	}
 	if(counter==0)
 	{
 		HAL_GPIO_TogglePin(GPIOA, LED_TEST_Pin);
 		counter=50;
-		if(flag==0){
-			flag=1;
-			display7SEG(2);
-			}
-		else{
+		if(flag%2!=0) HAL_GPIO_TogglePin(GPIOA, DOT_Pin);
+		switch(flag)
+		{
+		case 0:
+			HAL_GPIO_WritePin(GPIOA, en1_Pin, 0);
+			HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
 			display7SEG(1);
+			flag++;
+			break;
+		case 1:
+			HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en2_Pin, 0);
+			HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
+			display7SEG(2);
+			flag++;
+			break;
+		case 2:
+			HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en3_Pin, 0);
+			HAL_GPIO_WritePin(GPIOA, en4_Pin, 1);
+			display7SEG(3);
+			flag++;
+			break;
+		case 3:
+			HAL_GPIO_WritePin(GPIOA, en1_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en2_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en3_Pin, 1);
+			HAL_GPIO_WritePin(GPIOA, en4_Pin, 0);
+			display7SEG(0);
 			flag=0;
+			break;
 		}
 	}
 	counter--;
