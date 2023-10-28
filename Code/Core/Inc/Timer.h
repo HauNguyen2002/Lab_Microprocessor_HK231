@@ -1,75 +1,79 @@
 /*
  * Timer.h
  *
- *  Created on: Sep 15, 2023
+ *  Created on: Sep 25, 2023
  *      Author: ASUS
  */
+
+#include "main.h"
+#include "Button.h"
 
 #ifndef INC_TIMER_H_
 #define INC_TIMER_H_
 
-int TIMER_CYCLE=10;
+#define INTERNAL_CLOCK	8000000
 
-int timer_counter=0;
-int timer_flag=0;
 
-int scan_timer_counter=0;
-int scan_timer_flag=0;
 
-int matrix_timer_counter=0;
-int matrix_timer_flag=0;
+int counter_seg1=0;
+int counter_light=0;
+int counter_button_cooldown=0;
+int counter_adjust_light=0;
 
-int shift_timer_counter=0;
-int shift_timer_flag=0;
+static int flag_seg1=1;
+static int flag_light=1;
+static int flag_but_cooldown=1;
+static int flag_adjust_light=1;
 
-void scansetTimer(int duration)
+
+int getDuration(uint32_t duration,uint32_t prescaler, uint32_t period)
 {
-	scan_timer_counter=duration/TIMER_CYCLE;
-	scan_timer_flag=0;
+	return duration/((((prescaler*1.0+1)*(period+1))/INTERNAL_CLOCK)*1000);
 }
 
-void scantimerRun()
-{
-	if(scan_timer_counter==0) scan_timer_flag=1;
-	if(scan_timer_counter>0) scan_timer_counter--;
+void setSEG1Timer(int duration,uint32_t prescaler, uint32_t period){
+	counter_seg1=getDuration(duration,prescaler,period);
+	flag_seg1=0;
+
 }
 
-void setTimer(int duration)
+void timerseg1Run()
 {
-	timer_counter=duration/TIMER_CYCLE;
-	timer_flag=0;
+	if(counter_seg1==0) flag_seg1=1;
+	if(counter_seg1>0) counter_seg1--;
 }
 
-void timerRun()
-{
-	if(timer_counter==0) timer_flag=1;
-	if(timer_counter>0) timer_counter--;
+void setLightTimer(int duration,uint32_t prescaler, uint32_t period){
+	flag_light=0;
+	counter_light=getDuration(duration,prescaler,period);
 }
 
-void matrixsetTimer(int duration)
+void timerLightRun()
 {
-	matrix_timer_counter=duration/TIMER_CYCLE;
-	matrix_timer_flag=0;
+	if(counter_light==0) flag_light=1;
+	if(counter_light>0) counter_light--;
 }
 
-void matrixtimerRun()
-{
-	if(matrix_timer_counter==0) matrix_timer_flag=1;
-	if(matrix_timer_counter>0) matrix_timer_counter--;
+void setAdjustLightTimer(int duration,uint32_t prescaler, uint32_t period){
+	flag_adjust_light=0;
+	counter_adjust_light=getDuration(duration,prescaler,period);
 }
 
-void shiftsetTimer(int duration)
+void timerAdjustLightRun()
 {
-	shift_timer_counter=duration/TIMER_CYCLE;
-	shift_timer_flag=0;
+	if(counter_adjust_light==0) flag_adjust_light=1;
+	if(counter_adjust_light>0) counter_adjust_light--;
 }
 
-void shifttimerRun()
-{
-	if(shift_timer_counter==0) shift_timer_flag=1;
-	if(shift_timer_counter>0) shift_timer_counter--;
+void setButtonCooldownTimer(int duration,uint32_t prescaler, uint32_t period){
+	flag_but_cooldown=0;
+	counter_button_cooldown=getDuration(duration,prescaler,period);
 }
 
-
+void timerButtonCooldownRun()
+{
+	if(counter_button_cooldown==0) flag_but_cooldown=1;
+	if(counter_button_cooldown>0) counter_button_cooldown--;
+}
 
 #endif /* INC_TIMER_H_ */
