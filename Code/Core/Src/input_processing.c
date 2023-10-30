@@ -73,12 +73,9 @@ void setDuration(int duration,int mode)
 
 void applyDuration()
 {
-	trafficduration[0][0]=reddur;
-	trafficduration[1][2]=reddur;
-	trafficduration[0][2]=yellowdur;
-	trafficduration[1][1]=yellowdur;
-	trafficduration[0][1]=greendur;
-	trafficduration[1][0]=greendur;
+	trafficduration[0][0]=trafficduration[1][2]=reddur;
+	trafficduration[0][2]=trafficduration[1][1]=yellowdur;
+	trafficduration[0][1]=trafficduration[1][0]=greendur;
 }
 
 void fsm_for_mode_button(uint32_t prescaler, uint32_t period)
@@ -189,7 +186,6 @@ void fsm_for_set_button(uint32_t prescaler, uint32_t period)
 			case BUTTON_PRESSED:
 				if(!is_button_pressed(2)){
 					setbuttonState= BUTTON_RELEASED;
-					HAL_GPIO_TogglePin(GPIOB, TEST_Pin);
 					setDuration(incRoad1SEG,modeRoad2SEG);
 					setButtonCooldownTimer(200,prescaler, period);
 				}
@@ -216,72 +212,63 @@ void fsm_for_traffic_light(uint32_t prescaler, uint32_t period)
 		case HOLD:
 			break;
 		case RESETALL:
-			HAL_GPIO_WritePin(GPIOA, 0x1000,0);
-			HAL_GPIO_WritePin(GPIOB, 0x8000,0);
+			changeAutoTrafficLights(0);
 			ini_traffic_flag=0;
 			applyDuration();
 			lightstate=RED_GREEN;
 			break;
 		case RED_GREEN:
-				HAL_GPIO_WritePin(GPIOA, YELLOW1_Pin,0);
-				HAL_GPIO_WritePin(GPIOB, RED2_Pin,0);
-				HAL_GPIO_WritePin(GPIOA, RED1_Pin,1);
-				HAL_GPIO_WritePin(GPIOB, GREEN2_Pin,1);
-				ini_traffic_flag=1;
-				if(trafficduration[1][0]==1){
-					trafficduration[1][0]=trafficduration[0][1];
-					lightstate=RED_YELLOW;
-					ini_traffic_flag=0;
-					break;
-				}
-					trafficduration[0][0]--;
-					trafficduration[1][0]--;
+			changeAutoTrafficLights(1);
+			ini_traffic_flag=1;
+			if(trafficduration[1][0]==1){
+				trafficduration[1][0]=trafficduration[0][1];
+				lightstate=RED_YELLOW;
+				ini_traffic_flag=0;
+				break;
+			}
+				trafficduration[0][0]--;
+				trafficduration[1][0]--;
 			updatenumSEG(trafficduration[1][0], 0);
 			updatenumSEG(trafficduration[0][0], 1);
 			break;
 		case RED_YELLOW:
-				HAL_GPIO_WritePin(GPIOB, YELLOW2_Pin,1);
-				HAL_GPIO_WritePin(GPIOB, GREEN2_Pin,0);
-				if(trafficduration[0][0]==1 && trafficduration[1][1]==1){
-					trafficduration[0][0]=trafficduration[1][2];
-					trafficduration[1][1]=trafficduration[0][2];
-					lightstate=GREEN_RED;
-					ini_traffic_flag=0;
-					break;
-				}
-					trafficduration[0][0]--;
-					trafficduration[1][1]--;
+			changeAutoTrafficLights(2);
+			if(trafficduration[0][0]==1 && trafficduration[1][1]==1){
+				trafficduration[0][0]=trafficduration[1][2];
+				trafficduration[1][1]=trafficduration[0][2];
+				lightstate=GREEN_RED;
+				ini_traffic_flag=0;
+				break;
+			}
+			trafficduration[0][0]--;
+			trafficduration[1][1]--;
 			updatenumSEG(trafficduration[1][1], 0);
 			updatenumSEG(trafficduration[0][0], 1);
 			break;
 		case GREEN_RED:
-				HAL_GPIO_WritePin(GPIOA, GREEN1_Pin,1);
-				HAL_GPIO_WritePin(GPIOB, RED2_Pin,1);
-				HAL_GPIO_WritePin(GPIOA, RED1_Pin,0);
-				HAL_GPIO_WritePin(GPIOB, YELLOW2_Pin,0);
-				if(trafficduration[0][1]==1){
-					lightstate=YELLOW_RED;
-					trafficduration[0][1]=trafficduration[1][0];
-					ini_traffic_flag=0;
-					break;
-				}
-					trafficduration[0][1]--;
-					trafficduration[1][2]--;
+			changeAutoTrafficLights(3);
+			if(trafficduration[0][1]==1){
+				lightstate=YELLOW_RED;
+				trafficduration[0][1]=trafficduration[1][0];
+				ini_traffic_flag=0;
+				break;
+			}
+			trafficduration[0][1]--;
+			trafficduration[1][2]--;
 			updatenumSEG(trafficduration[1][2], 0);
 			updatenumSEG(trafficduration[0][1], 1);
 			break;
 		case YELLOW_RED:
-				HAL_GPIO_WritePin(GPIOA, YELLOW1_Pin,1);
-				HAL_GPIO_WritePin(GPIOA, GREEN1_Pin,0);
-				if(trafficduration[0][2]==1 && trafficduration[1][2]==1){
-					trafficduration[0][2]=trafficduration[1][1];
-					trafficduration[1][2]=trafficduration[0][0];
-					lightstate=RED_GREEN;
-					ini_traffic_flag=0;
-					break;
-				}
-					trafficduration[0][2]--;
-					trafficduration[1][2]--;
+			changeAutoTrafficLights(4);
+			if(trafficduration[0][2]==1 && trafficduration[1][2]==1){
+				trafficduration[0][2]=trafficduration[1][1];
+				trafficduration[1][2]=trafficduration[0][0];
+				lightstate=RED_GREEN;
+				ini_traffic_flag=0;
+				break;
+			}
+			trafficduration[0][2]--;
+			trafficduration[1][2]--;
 			updatenumSEG(trafficduration[1][2], 0);
 			updatenumSEG(trafficduration[0][2], 1);
 			break;
@@ -296,36 +283,28 @@ void fsm_for_adjusting_light(uint32_t prescaler, uint32_t period)
 	case ADJUST_HOLD:
 		break;
 	case ADJUST_RESET:
-		HAL_GPIO_WritePin(GPIOB, 0xE000,0);
-		HAL_GPIO_WritePin(GPIOA, 0x1C00,0);
+		changeBlinkTrafficLights(0);
 
 		adjuststate=RED;
 		break;
 	case RED:
 		if(flag_adjust_light==1)
 		{
-			HAL_GPIO_TogglePin(GPIOA, RED1_Pin);
-			HAL_GPIO_TogglePin(GPIOB, RED2_Pin);
+			changeBlinkTrafficLights(1);
 			setAdjustLightTimer(250,prescaler, period);
 		}
 		break;
 	case YELLOW:
 		if(flag_adjust_light==1)
 		{
-			HAL_GPIO_WritePin(GPIOA, RED1_Pin,0);
-			HAL_GPIO_WritePin(GPIOB, RED2_Pin,0);
-			HAL_GPIO_TogglePin(GPIOA, YELLOW1_Pin);
-			HAL_GPIO_TogglePin(GPIOB, YELLOW2_Pin);
+			changeBlinkTrafficLights(2);
 			setAdjustLightTimer(250,prescaler, period);
 		}
 		break;
 	case GREEN:
 		if(flag_adjust_light==1)
 		{
-			HAL_GPIO_WritePin(GPIOA, YELLOW1_Pin,0);
-			HAL_GPIO_WritePin(GPIOB, YELLOW2_Pin,0);
-			HAL_GPIO_TogglePin(GPIOA, GREEN1_Pin);
-			HAL_GPIO_TogglePin(GPIOB, GREEN2_Pin);
+			changeBlinkTrafficLights(3);
 			setAdjustLightTimer(250,prescaler, period);
 		}
 		break;
@@ -376,7 +355,6 @@ void updateSEG(uint32_t prescaler, uint32_t period)
 	}
 }
 
-
 void displaySEG2(int num)
 {
 	HAL_GPIO_WritePin(GPIOA, seg2[10],0);
@@ -389,6 +367,62 @@ void displaySEG1(int num)
 	HAL_GPIO_TogglePin(GPIOB, seg1[num]);
 }
 
+
+void changeAutoTrafficLights(int state)
+
+{
+	switch(state){
+	case 0:
+		HAL_GPIO_WritePin(GPIOA, 0x1000,0);
+		HAL_GPIO_WritePin(GPIOB, 0x8000,0);
+		break;
+	case 1:
+		HAL_GPIO_WritePin(GPIOA, YELLOW1_Pin,0);
+		HAL_GPIO_WritePin(GPIOB, RED2_Pin,0);
+		HAL_GPIO_WritePin(GPIOA, RED1_Pin,1);
+		HAL_GPIO_WritePin(GPIOB, GREEN2_Pin,1);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(GPIOB, YELLOW2_Pin,1);
+		HAL_GPIO_WritePin(GPIOB, GREEN2_Pin,0);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(GPIOA, GREEN1_Pin,1);
+		HAL_GPIO_WritePin(GPIOB, RED2_Pin,1);
+		HAL_GPIO_WritePin(GPIOA, RED1_Pin,0);
+		HAL_GPIO_WritePin(GPIOB, YELLOW2_Pin,0);
+		break;
+	case 4:
+		HAL_GPIO_WritePin(GPIOA, YELLOW1_Pin,1);
+		HAL_GPIO_WritePin(GPIOA, GREEN1_Pin,0);
+		break;
+	}
+}
+void changeBlinkTrafficLights(int state)
+{
+	switch(state){
+	case 0:
+		HAL_GPIO_WritePin(GPIOB, 0xE000,0);
+		HAL_GPIO_WritePin(GPIOA, 0x1C00,0);
+		break;
+	case 1:
+		HAL_GPIO_TogglePin(GPIOA, RED1_Pin);
+		HAL_GPIO_TogglePin(GPIOB, RED2_Pin);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(GPIOA, RED1_Pin,0);
+		HAL_GPIO_WritePin(GPIOB, RED2_Pin,0);
+		HAL_GPIO_TogglePin(GPIOA, YELLOW1_Pin);
+		HAL_GPIO_TogglePin(GPIOB, YELLOW2_Pin);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(GPIOA, YELLOW1_Pin,0);
+		HAL_GPIO_WritePin(GPIOB, YELLOW2_Pin,0);
+		HAL_GPIO_TogglePin(GPIOA, GREEN1_Pin);
+		HAL_GPIO_TogglePin(GPIOB, GREEN2_Pin);
+		break;
+	}
+}
 
 
 
