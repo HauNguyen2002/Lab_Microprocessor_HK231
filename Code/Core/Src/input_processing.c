@@ -14,7 +14,7 @@ enum ButtonState{BUTTON_HOLD,BUTTON_RELEASED, BUTTON_PRESSED,
 
 
 enum ButtonState increasebuttonState= BUTTON_HOLD;
-enum ButtonState modebuttonState= BUTTON_RELEASED;
+enum ButtonState modebuttonState= BUTTON_HOLD;
 enum ButtonState setbuttonState= BUTTON_HOLD;
 
 enum LightState{RED_GREEN, RED_YELLOW, GREEN_RED, YELLOW_RED,HOLD, RESETALL};
@@ -29,7 +29,7 @@ int led_ini_flag=0;
 
 
 int incRoad1SEG=0;
-int modeRoad2SEG=0;
+int modeRoad2SEG=1;
 
 int trafficduration[2][3]={{6,4,3},{4,3,6}};
 int reddur=6;
@@ -37,24 +37,43 @@ int yellowdur=3;
 int greendur=4;
 int ini_traffic_flag=0;
 
-void checkAdjustMode(int mode)
+void checkAdjustMode()
 {
-	switch(mode){
+	switch(modeRoad2SEG){
+	case 0:
+		lightstate=RESETALL;
+		led_ini_flag=0;
+		modeRoad2SEG=1;
+	case 1:
+		increasebuttonState=BUTTON_HOLD;
+		setbuttonState= BUTTON_HOLD;
+		adjuststate=ADJUST_HOLD;
+		modeRoad2SEG=2;
+		break;
 	case 2:
+		increasebuttonState=BUTTON_RELEASED;
+		setbuttonState= BUTTON_RELEASED;
+		adjuststate= ADJUST_RESET;
+		lightstate=HOLD;
 		incRoad1SEG=reddur-1;
+		displayLedinManualMode();
+		modeRoad2SEG=3;
 		break;
 	case 3:
 		incRoad1SEG=yellowdur-1;
 		adjuststate= YELLOW;
+		displayLedinManualMode();
+		modeRoad2SEG=4;
 		break;
 	case 4:
 		incRoad1SEG=greendur-1;
 		adjuststate= GREEN;
+		displayLedinManualMode();
+		modeRoad2SEG=0;
 		break;
 	}
 }
 
-void applyDuration();
 void setDuration(int duration,int mode)
 {
 	switch(mode){
@@ -93,27 +112,8 @@ void fsm_for_mode_button(uint32_t prescaler, uint32_t period)
 			break;
 		case BUTTON_PRESSED:
 			if(!is_button_pressed(0)){
-				modeRoad2SEG++;
 				modebuttonState= BUTTON_RELEASED;
-				if(modeRoad2SEG>4){
-					modeRoad2SEG=1;
-					lightstate=RESETALL;
-				}
-				if(modeRoad2SEG==1){
-					increasebuttonState=BUTTON_HOLD;
-					setbuttonState= BUTTON_HOLD;
-					adjuststate=ADJUST_HOLD;
-					led_ini_flag=0;
-				}
-				else{
-					increasebuttonState=BUTTON_RELEASED;
-					setbuttonState= BUTTON_RELEASED;
-					adjuststate= ADJUST_RESET;
-					lightstate=HOLD;
-					checkAdjustMode(modeRoad2SEG);
-					updatenumSEG(modeRoad2SEG,0);
-					updatenumSEG(incRoad1SEG, 1);
-				}
+				checkAdjustMode();
 				setButtonCooldownTimer(200,prescaler, period);
 			}
 			else{
@@ -186,7 +186,7 @@ void fsm_for_set_button(uint32_t prescaler, uint32_t period)
 			case BUTTON_PRESSED:
 				if(!is_button_pressed(2)){
 					setbuttonState= BUTTON_RELEASED;
-					setDuration(incRoad1SEG,modeRoad2SEG);
+					setDuration(incRoad1SEG,modeRoad2SEG-1);
 					setButtonCooldownTimer(200,prescaler, period);
 				}
 				else{
@@ -423,7 +423,11 @@ void changeBlinkTrafficLights(int state)
 		break;
 	}
 }
-
+void displayLedinManualMode()
+{
+	updatenumSEG(modeRoad2SEG,0);
+	updatenumSEG(incRoad1SEG, 1);
+}
 
 
 
